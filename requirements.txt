@@ -1,0 +1,10 @@
+# Python=3.12.*
+jupyter
+matplotlib
+notebook
+numpy
+pandas
+scipy==1.14.*
+seaborn
+tqdm
+scikit-image==0.25.0
