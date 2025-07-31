@@ -4,21 +4,42 @@ import numpy as np
 import scipy.signal.windows as win
 
 
-def make_window(
-    shape: Sequence[int],
-    boundary: Sequence[int],
+def make_window(method: str, shape: Sequence[int], **kwargs) -> np.ndarray:
+    """Choices of window matrix.
+
+    Args:
+        method: "exp" for exponential decay, "tukey" for tukey window.
+
+    Returns:
+        np.ndarray: The window matrix with give shape.
+    """
+    if method == "exp":
+        window = exp_window_2d(*shape, **kwargs)
+    elif method == "tukey":
+        window = tukey_window_2d(*shape, **kwargs)
+    else:
+        raise ValueError(f"Unknown method: {method}")
+    return window
+
+
+def exp_window_2d(
+    nx: int,
+    nz: int,
+    left: int,
+    right: int,
+    up: int,
+    down: int,
     ex: float = 6.0,
     ll: float = 1.5,
 ):
     """
     Args:
         shape: Shape of the output array.
-        boundary: [left, right, up, down] Margins of the window.
+        left, right, up, down: Margins of the window.
         ex: Controls the decreasing speed.
         ll: Controls the decreasing speed.
     """
-    nx, nz = shape
-    nxl, nxr, nzu, nzd = boundary
+    nxl, nxr, nzu, nzd = left, right, up, down
 
     W = np.ones((nx, nz))
     zmin, xmin = nzu, nxl
@@ -39,19 +60,17 @@ def make_window(
     return W
 
 
-def tukey_window_2d(shape: Sequence[int], alpha: Sequence[float]):
+def tukey_window_2d(nx: int, ny: int, alpha_x: float, alpha_y: float):
     """
     Generate a 2D Tukey window that only reduces values near boundaries.
 
     Parameters:
-        shape (tuple): Shape of the desired 2D window (rows, cols).
-        alpha (tuple): Tapering parameter (0 = rectangular, 1 = Hann-like).
+        nx, ny: Shape of the desired 2D window (rows, cols).
+        alpha_x, alpha_y: Tapering parameter (0 = rectangular, 1 = Hann-like).
 
     Returns:
         np.ndarray: 2D Tukey window mask.
     """
-    nx, ny = shape
-    alpha_x, alpha_y = alpha
     win_x = win.tukey(nx, alpha_x)  # 1D Tukey window along x
     win_y = win.tukey(ny, alpha_y)  # 1D Tukey window along y
 
