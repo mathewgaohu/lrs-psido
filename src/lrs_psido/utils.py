@@ -69,7 +69,7 @@ def create_vector_by_indices(
         if np.abs(v.imag).max() < 0.1 * np.abs(v.real).max():
             return v.real  # Imaginary part ignored.
         else:
-            logger.warning(
+            logger.info(
                 "The imaginary part of the probing vector isn't ignorable. "
                 + "The probing vector is complex. "
                 + f"If it is not expected, check indices: {indices}"

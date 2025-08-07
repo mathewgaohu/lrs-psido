@@ -56,7 +56,11 @@ def approximate_symbol_columns(
         if op_vecs is not None:
             op_vec = op_vecs[i].reshape(n)
         else:
-            op_vec = (op.H * vec.reshape(-1)).reshape(n)
+            if np.iscomplexobj(vec):
+                op_vec = (op.H * vec.real.reshape(-1)).reshape(n) 
+                op_vec = op_vec + (op.H * vec.imag.reshape(-1) * 1j).reshape(n)
+            else:
+                op_vec = (op.H * vec.reshape(-1)).reshape(n)
 
         # Convert to specturm
         op_vec_fft = fft.fft2(op_vec)

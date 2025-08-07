@@ -91,14 +91,14 @@ class FWIResultsAnalyzer:
         # self.plot_ssim(maxiter)
         self.plot_model_vs_depth(it=show_iter, offset=offset)
         self.plot_model_err_vs_depth(it=show_iter, offset=offset)
-        if not self.sip.hessian_config:
+        if not hasattr(self.sip, "hessian_config"):
             self.plot_data_fft(it=show_iter)
 
         if self.N == 1:  # Single result analysis
             self.plot_ff(maxiter)
             # self.plot_ssim_img(maxiter_image)
             self.plot_updates(maxiter_image)
-            if not self.sip.hessian_config:
+            if not hasattr(self.sip, "hessian_config"):
                 self.plot_data(src_idx=self.sip.n_src // 2)
 
         if self.N > 1:
@@ -123,8 +123,7 @@ class FWIResultsAnalyzer:
         plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Misfit")
         plt.xlabel("Iterations")
-        if not self.sip.is_toy:
-            plt.ylabel(r"$\frac{1}{2} \| f(m)-d\|^2_{\Gamma_{noise}^{-1}}$")
+        plt.ylabel(r"$\frac{1}{2} \| f(m)-d\|^2_{\Gamma_{noise}^{-1}}$")
         plt.legend()
         plt.savefig(self.output_dir / "mis.png")
 
@@ -281,25 +280,32 @@ class FWIResultsAnalyzer:
         plt.savefig(self.output_dir / "data_error_fft.png")
 
     def compare_models(self, it: int, ncols: int = 3, same_range=True) -> None:
-        width = 14  # pdf file's text width
         nrows = np.ceil((self.N + 1) / ncols).astype(int)
         xt = self.sip.mt - self.sip.m0
         kwargs = {}
         if same_range:
             kwargs["vmin"] = xt.min()
             kwargs["vmax"] = xt.max()
-        fig, axes = plt.subplots(
-            nrows, ncols, figsize=(width, width / ncols / self.sip.x_ratio * nrows)
+        fig, axs = plt.subplots(
+            nrows, ncols, figsize=self.sip.x_size * np.array([ncols, nrows])
         )
-        plt.sca(axes.flat[0])
-        self.sip.plot(xt, **kwargs)
-        plt.colorbar()
-        plt.title(r"Target Solution $(m_{true}-m_0)$")
+        plt.sca(axs.flat[0])
+        self.sip.plot(
+            xt,
+            title=r"Target Solution $(m_{true}-m_0)$",
+            colorbar=True,
+            cbar_label="Velocity (m/s)",
+            **kwargs,
+        )
         for i, res in enumerate(self.results):
-            plt.sca(axes.flat[i + 1])
-            self.sip.plot(self.sip.W * res.xx[it], **kwargs)
-            plt.colorbar()
-            plt.title(f"{res.label} - {it}th Iteration ($m_k-m_0$)")
+            plt.sca(axs.flat[i + 1])
+            self.sip.plot(
+                self.sip.W * res.xx[it],
+                title=f"{res.label} - {it}th Iteration ($m_k-m_0$)",
+                colorbar=True,
+                cbar_label="Velocity (m/s)",
+                **kwargs,
+            )
         plt.tight_layout()
         plt.savefig(self.output_dir / f"compare_x{it}.png")
 
@@ -325,8 +331,7 @@ class NewtonCGResultsAnalyzer(FWIResultsAnalyzer):
         plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.title("Misfit")
         plt.xlabel("Number of Hessian Actions")
-        if not self.sip.is_toy:
-            plt.ylabel(r"$\frac{1}{2} \| f(m)-d\|^2_{\Gamma_{noise}^{-1}}$")
+        plt.ylabel(r"$\frac{1}{2} \| f(m)-d\|^2_{\Gamma_{noise}^{-1}}$")
         plt.legend()
         plt.savefig(self.output_dir / "mis.png")
 
